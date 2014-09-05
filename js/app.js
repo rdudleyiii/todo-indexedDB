@@ -1,21 +1,33 @@
 (function() {
 
   // 'global' variable to store reference to the database
-  var db, input;
+  var db, input, ul;
 
   databaseOpen(function() {
     input = document.querySelector('input');
+    ul = document.querySelector('ul');
 
     document.body.addEventListener('submit', onSubmit);
     
-    databaseTodosGet(function (todos) {
-      console.log(todos);
-    });
+    databaseTodosGet(renderAllTodos);
   });
+
+  function renderAllTodos (todos) {
+    var html = "";
+    todos.forEach(function (todo) {
+      html += todoToHtml(todo);
+    });
+    ul.innerHTML = html;
+  }
+
+  function todoToHtml (todo) {
+    return '<li>' + todo.text + '</li>';
+  }
 
   function onSubmit (e) {
     e.preventDefault();
     databaseTodosAdd(input.value, function () {
+      databaseTodosGet(renderAllTodos);
       input.value = '';
     });
   }
