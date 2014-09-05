@@ -6,14 +6,15 @@
   databaseOpen(function() {
     input = document.querySelector('input');
     ul = document.querySelector('ul');
-
     document.body.addEventListener('submit', onSubmit);
-    
+    document.body.addEventListener('click', onClick);
+
     databaseTodosGet(renderAllTodos);
   });
 
   function renderAllTodos (todos) {
     var html = "";
+    
     todos.forEach(function (todo) {
       html += todoToHtml(todo);
     });
@@ -21,7 +22,18 @@
   }
 
   function todoToHtml (todo) {
-    return '<li class="list-group-item"><div class="col-xs-11 col-sm-11 col-md-11">' + todo.text + '</div><span id="delete' + todo.timeStamp + '" class="glyphicon glyphicon-trash"></span></li>';
+    return '<li class="list-group-item"><div class="col-xs-11 col-sm-11 col-md-11">' + todo.text + '</div><span id="' + todo.timeStamp + '" class="glyphicon glyphicon-trash delete"></span></li>';
+  }
+
+  function onClick (e) {
+    var _id = document.getElementById(e.srcElement.id);
+    
+    if ( _id != null 
+      && _id.hasAttribute('id') ) {
+      databaseTodosDelete(parseInt(_id.getAttribute('id'), 10), function() {
+        databaseTodosGet(renderAllTodos);
+      });
+    }
   }
 
   function onSubmit (e) {
@@ -52,8 +64,25 @@
     request.onerror = databaseError;
   }
 
-  function databaseError(e) {
-    console.error('An IndexedDB error has occurred', e);
+  function databaseTodosGet (callback) {
+    var trans = db.transaction(['todo'], 'readonly');
+    var store = trans.objectStore('todo');
+
+    var keyRange = IDBKeyRange.lowerBound(0);
+    var cursorRequest = store.openCursor(keyRange);
+
+    var data = [];
+    
+    cursorRequest.onsuccess = function (e) {
+      var result = e.target.result;
+
+      if (result) {
+        data.push(result.value);
+        result.continue();
+      } else {
+        callback(data);
+      }
+    };
   }
 
   function databaseTodosAdd (text, callback) {
@@ -71,26 +100,20 @@
     req.onerror = databaseError;
   }
 
-  function databaseTodosGet (callback) {
-    var trans = db.transaction(['todo'], 'readonly');
+  function databaseTodosDelete (id, callback) {
+    var trans = db.transaction(['todo'], 'readwrite');
     var store = trans.objectStore('todo');
-
-    // get stuff from the store
-    var keyRange = IDBKeyRange.lowerBound(0);
-    var cursorRequest = store.openCursor(keyRange);
-
-    var data = [];
+    var req = store.delete(id);
     
-    cursorRequest.onsuccess = function (e) {
-      var result = e.target.result;
-
-      if (result) {
-        data.push(result.value);
-        result.continue();
-      } else {
-        callback(data);
-      }
+    trans.oncomplete = function(e) {
+      callback();
     };
+    req.onerror = databaseError;
   }
+
+  function databaseError(e) {
+    console.error('An IndexedDB error has occurred', e);
+  }
+
 
 }());
