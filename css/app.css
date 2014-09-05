@@ -1,3 +1,12 @@
 body {
 	background: #fff;
+	font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+ul {
+	font-size: 22px;
+}
+
+.panel-title {
+	font-size: 18px;
 }

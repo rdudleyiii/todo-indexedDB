@@ -21,7 +21,7 @@
   }
 
   function todoToHtml (todo) {
-    return '<li>' + todo.text + '</li>';
+    return '<li class="list-group-item"><div class="col-xs-11 col-sm-11 col-md-11">' + todo.text + '</div><span id="delete' + todo.timeStamp + '" class="glyphicon glyphicon-trash"></span></li>';
   }
 
   function onSubmit (e) {
